@@ -7,8 +7,6 @@
 
         public VoteManagerState()
         {
-            Locations = new List<string>(5);
-            Votes = new Dictionary<string, string>();
             IsVotingEnabled = true;
         }
 

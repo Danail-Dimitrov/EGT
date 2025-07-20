@@ -2,9 +2,9 @@
 {
     public interface IVoteManagerGrain : IGrainWithStringKey
     {
-        void Initialize(ICollection<string> locations);
+        Task Initialize(ICollection<string> locations);
 
-        void Vote(string user,string location);
+        Task Vote(string user,string location);
 
         Task<bool> ExistsAsync();
 
