@@ -1,6 +1,6 @@
-using Azure.Data.Tables;
+using LunchApp.Client.Services;
+using LunchApp.Client.Services.Interfaces;
 using LunchApp.Grains.Abstractions;
-using Orleans;
 using Orleans.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,46 +24,29 @@ builder.Host.UseOrleansClient((context, client) =>
 // Add services to the container.
 builder.Services.AddRazorPages();
 
+// DI
+builder.Services.AddScoped<IVoteService, VoteService>();
+
 var app = builder.Build();
 
-app.MapGet("test/{id}", 
-    async (
-        int id,
-        IClusterClient clusterClient
-    ) =>
+app.MapControllers();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
 {
-    var grain = clusterClient.GetGrain<ITestGrain>(1);
+    app.UseExceptionHandler("/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
 
-    var res = await grain.GetValue();
+app.UseHttpsRedirection();
 
-    return Results.Ok($"Grain value: {res}");
-});
+app.UseRouting();
 
-app.MapPost("test", async (IClusterClient clusterClient) =>
-{
-    var grain = clusterClient.GetGrain<ITestGrain>(1);
+app.UseAuthorization();
 
-    await grain.Init(1);
-
-    return Results.Ok("Grain initialized");
-});
-
-//// Configure the HTTP request pipeline.
-//if (!app.Environment.IsDevelopment())
-//{
-//    app.UseExceptionHandler("/Error");
-//    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-//    app.UseHsts();
-//}
-
-//app.UseHttpsRedirection();
-
-//app.UseRouting();
-
-//app.UseAuthorization();
-
-//app.MapStaticAssets();
-//app.MapRazorPages()
-//   .WithStaticAssets();
+app.MapStaticAssets();
+app.MapRazorPages()
+   .WithStaticAssets();
 
 app.Run();

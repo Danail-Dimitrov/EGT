@@ -16,5 +16,10 @@ await Host.CreateDefaultBuilder(args)
             options.ClusterId = "dev"; // Our cluster
             options.ServiceId = "LunchApp"; // Our service
         });
+
+        siloBuilder.AddAzureTableGrainStorage("lunchapp", options =>
+        {
+            options.TableServiceClient = new Azure.Data.Tables.TableServiceClient("UseDevelopmentStorage=true");
+        });
     })
     .RunConsoleAsync();
