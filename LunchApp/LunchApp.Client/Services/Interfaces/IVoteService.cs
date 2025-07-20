@@ -1,11 +1,23 @@
-﻿namespace LunchApp.Client.Services.Interfaces
+﻿
+namespace LunchApp.Client.Services.Interfaces
 {
     public interface IVoteService
     {
-        public Task<DateTime> GetTime();
+        Task<DateTime> GetTime();
 
-        public Task SetTime(DateTime time);
+        Task SetTime(DateTime time);
 
-        public Task CastVote();
+        Task<ICollection<string>> GetLocations();
+
+        Task CastVote(string userName, string location);
+
+        Task<bool> ExistsVoteForDay(DateTime date);
+
+        Task CreateVote(List<string> strings);
+
+        Task<bool> HasVotingEnded();
+
+        Task<IDictionary<string, string>> GetVotes();
+        Task<bool> CanDisplayVote();
     }
 }

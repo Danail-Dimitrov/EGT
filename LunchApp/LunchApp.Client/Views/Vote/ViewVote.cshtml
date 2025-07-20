@@ -1,0 +1,28 @@
+﻿@{
+    var votes = ViewData["Votes"] as IDictionary<string, string>;
+}
+
+@if (votes != null && votes.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Vote</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var vote in votes)
+        {
+            <tr>
+                <td>@vote.Key</td>
+                <td>@vote.Value</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No votes to display.</p>
+}

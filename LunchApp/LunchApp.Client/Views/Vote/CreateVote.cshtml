@@ -1,0 +1,20 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    var userName = Context.Request.Query["userName"].ToString();
+}
+
+<h2>Enter 5 Strings</h2>
+
+<form method="post" action="?userName=@userName">
+    @for (int i = 0; i < 5; i++)
+    {
+        <div>
+            <label for="Strings_@i">Location @(@i + 1):</label>
+            <input type="text" name="Strings[@i]" id="Strings_@i" />
+        </div>
+    }
+    <input type="hidden" name="userName" value="@userName" />
+    <button type="submit">Submit</button>
+</form>

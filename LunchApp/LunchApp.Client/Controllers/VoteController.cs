@@ -8,13 +8,11 @@ namespace LunchApp.Client.Controllers
     [Route("[controller]")]
     public class VoteController : Controller
     {
-        private readonly IClusterClient _clusterClient;
         private readonly IVoteService _voteService;
 
-        public VoteController(IClusterClient clusterClient, 
+        public VoteController(IClusterClient clusterClient,
             IVoteService voteService)
         {
-            _clusterClient = clusterClient ?? throw new ArgumentNullException(nameof(clusterClient));
             _voteService = voteService ?? throw new ArgumentNullException(nameof(_voteService));
         }
 
@@ -24,15 +22,17 @@ namespace LunchApp.Client.Controllers
             if (userName == "clock")
                 return RedirectToAction("Clock");
 
-            var clockGrain = this._clusterClient.GetGrain<IClockGrain>(0);
+            var currentDate = await _voteService.GetTime();
+            var existsVoteForDay = await _voteService.ExistsVoteForDay(currentDate);
 
-            var time = await clockGrain.GetCurrentTime();
-            // You can process the input here as needed
-            return Content($"Received input: {time}");
+            if (!existsVoteForDay)
+                return RedirectToAction("CreateVote", new { userName });
+
+            return RedirectToAction("Vote", new { userName });
         }
 
         [HttpGet("Clock")]
-        public async Task<IActionResult> Clock()
+        public IActionResult Clock()
         {
             return View();
         }
@@ -45,7 +45,63 @@ namespace LunchApp.Client.Controllers
 
             _voteService.SetTime(model.Date);
 
-            return Ok();
+            return RedirectToPage("/Index");
+        }
+
+        [HttpGet("CreateVote")]
+        public async Task<IActionResult> CreateVote([FromQuery] string userName)
+        {
+            if (await _voteService.HasVotingEnded())
+                return BadRequest("Voting Ended");
+
+            ViewData["UserName"] = userName;
+            return View();
+        }
+
+        [HttpPost("CreateVote")]
+        public async Task<IActionResult> CreateVote([FromForm] List<string> strings, [FromQuery] string userName)
+        {
+            await _voteService.CreateVote(strings);
+
+            return RedirectToAction("Vote", new { userName });
+        }
+
+        [HttpGet("Vote")]
+        public async Task<IActionResult> Vote([FromQuery] string userName)
+        {
+            if (string.IsNullOrEmpty(userName))
+                return BadRequest("Username is required.");
+
+            if (await _voteService.HasVotingEnded())
+                return RedirectToAction("ViewVote");
+
+            ViewData["UserName"] = userName;
+            ViewData["Locations"] = await _voteService.GetLocations();
+
+            return View();
+        }
+
+        [HttpPost("Vote")]
+        public async Task<IActionResult> Vote([FromForm] string location, [FromQuery] string userName)
+        {
+            if (string.IsNullOrEmpty(location) || string.IsNullOrEmpty(userName))
+                return BadRequest("Location and username are required.");
+
+            await _voteService.CastVote(userName, location);
+
+            // Redirect to a confirmation page or back to the index
+            return RedirectToAction("Index", new { userName });
+        }
+
+        [HttpGet("ViewVote")]
+        public async Task<IActionResult> ViewVote()
+        {
+            if (!await _voteService.CanDisplayVote())
+                return BadRequest("Voting has ended");
+
+            var votes = await _voteService.GetVotes();
+            ViewData["Votes"] = votes;
+            return View();
         }
     }
 }

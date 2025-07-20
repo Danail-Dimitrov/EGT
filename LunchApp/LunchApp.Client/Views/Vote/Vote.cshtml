@@ -1,0 +1,25 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    var locations = ViewData["Locations"] as ICollection<string>;
+    var userName = ViewData["UserName"] as string;
+}
+
+<form method="post" action="@Url.Action("Vote", "Vote", new { userName = userName })">
+    <div>
+        <label for="location">Select a location:</label>
+        <select id="location" name="location" required>
+            @foreach (var location in locations)
+            {
+                <option value="@location">@location</option>
+            }
+        </select>
+    </div>
+    <button type="submit">Vote</button>
+</form>
+
+<!-- Button to navigate to the ViewVote endpoint -->
+<form method="get" action="@Url.Action("ViewVote", "Vote", new { userName = userName })" style="margin-top: 1em;">
+    <button type="submit">View Votes</button>
+</form>

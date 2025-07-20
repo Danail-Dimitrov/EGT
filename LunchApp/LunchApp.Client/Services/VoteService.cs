@@ -1,5 +1,6 @@
 ﻿using LunchApp.Client.Services.Interfaces;
 using LunchApp.Grains.Abstractions;
+using System;
 
 namespace LunchApp.Client.Services
 {
@@ -12,14 +13,78 @@ namespace LunchApp.Client.Services
             _clusterClient = clusterClient;
         }
 
-        public Task CastVote()
+        public async Task<bool> CanDisplayVote()
         {
-            throw new NotImplementedException();
+            var clockGrain = this._clusterClient.GetGrain<IClockGrain>(0);
+
+            var time = await clockGrain.GetCurrentTime();
+
+            TimeSpan targetTime = new TimeSpan(13, 30, 0);
+
+            return time.TimeOfDay < targetTime;
         }
 
-        public Task<DateTime> GetTime()
+        public async Task CastVote(string userName, string location)
         {
-            throw new NotImplementedException();
+            var time = await GetTime();
+            var date = time.ToString("dd-MM-yyyy");
+
+            var voteGrain = _clusterClient.GetGrain<IVoteManagerGrain>(date);
+            voteGrain.Vote(userName, location);
+        }
+
+        public async Task CreateVote(List<string> strings)
+        {
+            var time = await GetTime();
+            var date = time.ToString("dd-MM-yyyy");
+
+            var voteGrain = _clusterClient.GetGrain<IVoteManagerGrain>(date);
+            voteGrain.Initialize(strings);
+        }
+
+        public async Task<bool> ExistsVoteForDay(DateTime date)
+        {
+            string currentDateString = date.ToString("dd-MM-yyyy");
+
+            var voteGrain = _clusterClient.GetGrain<IVoteManagerGrain>(currentDateString);
+
+            return await voteGrain.ExistsAsync();
+        }
+
+        public async Task<ICollection<string>> GetLocations()
+        {
+            var time = await GetTime();
+            var date = time.ToString("dd-MM-yyyy");
+
+            var voteGrain = _clusterClient.GetGrain<IVoteManagerGrain>(date);
+            return await voteGrain.GetLocations();
+        }
+
+        public async Task<DateTime> GetTime()
+        {
+            var clockGrain = this._clusterClient.GetGrain<IClockGrain>(0);
+
+            return await clockGrain.GetCurrentTime();
+        }
+
+        public async Task<IDictionary<string, string>> GetVotes()
+        {
+            var time = await GetTime();
+            var date = time.ToString("dd-MM-yyyy");
+
+            var voteGrain = _clusterClient.GetGrain<IVoteManagerGrain>(date);
+            return await voteGrain.GetVotes();
+        }
+
+        public async Task<bool> HasVotingEnded()
+        {
+            var clockGrain = this._clusterClient.GetGrain<IClockGrain>(0);
+
+            var time = await clockGrain.GetCurrentTime();
+
+            TimeSpan targetTime = new TimeSpan(11, 30, 0);
+
+            return time.TimeOfDay > targetTime;
         }
 
         public async Task SetTime(DateTime time)
