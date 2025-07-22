@@ -1,0 +1,1 @@
+You need Azurite instance running to emulate the azure storage. You need to run the silo and the client in the same time.
